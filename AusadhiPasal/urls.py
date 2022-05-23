@@ -24,6 +24,7 @@ urlpatterns = [
     path('',views.home,name='home'),
     path('store/',include('store.urls')),
     path('cart/',include('carts.urls')),
+    path('', include('django.contrib.auth.urls')),
     path('accounts/', include('accounts.urls')),
 
     # order

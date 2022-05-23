@@ -98,7 +98,9 @@
 							<dd class="text-right text-dark b"><strong>Rs. {{grand_total}}</strong></dd>
 						</dl>
 						<!-- <a href="{% url 'checkout' %}" class="btn btn-primary btn-block"> Make payment </a> -->
-						<button id="payment-button" style="background-color: #5D2E8E; color: white; width: 100%; height: 40px; border-radius: 10px;">Pay with khalti</button>
+						<button id="payment-button"
+							style="background-color: #5D2E8E; color: white; width: 100%; height: 40px; border-radius: 10px;">Pay
+							with khalti</button>
 
 
 					</div> <!-- card-body.// -->
@@ -115,16 +117,26 @@
 </section>
 <!-- ========================= SECTION CONTENT END// ========================= -->
 <script>
-    function verifyPayment(payload) {
-        $.ajax({
-            url: "{% url 'verify_payment' %}",
-            type: "POST",
-            data: payload,
-            dataType: 'json',
-            success: function (response) { alert(response) },
-            error: function (error) { alert(error.responseJSON['message']) }
-        });
-    }
+	// var url = "{% url 'verify_payment' %}"
+	// var csrftoken = getCookie('csrftoken');
+	// var orderID = "{{order.order_number}}"
+	// var payment_method = 'Khalti'
+	// var redirect_url = "{% url 'order_complete' %}"
+
+	async function verifyPayment(payload) {
+		fetch('/orders/api/verify_payment/', {
+			method: "POST",
+			body: JSON.stringify(payload)
+		}).then((response => {
+			if (response.ok) {
+				console.log('success')
+				window.location.href = '/orders/order_complete';
+			}
+			else {
+				console.log('error')
+			}
+		}))
+	}
 
 	var config = {
 		// replace the publicKey with yours
@@ -138,17 +150,18 @@
 			"MOBILE_BANKING",
 			"CONNECT_IPS",
 			"SCT",
-			],
+		],
 		"eventHandler": {
-			onSuccess (payload) {
+			onSuccess(payload) {
 				// hit merchant api for initiating verfication
-                console.log(payload);
-                verifyPayment(payload)
+				console.log(payload);
+				verifyPayment(payload);
+
 			},
-			onError (error) {
+			onError(error) {
 				console.log(error);
 			},
-			onClose () {
+			onClose() {
 				console.log('widget is closing');
 			}
 		}
@@ -158,9 +171,7 @@
 	var btn = document.getElementById("payment-button");
 	btn.onclick = function () {
 		// minimum transaction amount must be 10, i.e 1000 in paisa.
-		checkout.show({amount:{{grand_total}}*100});
+		checkout.show({ amount: {{ grand_total }} * 100});
 	}
 </script>
-
-
 {% endblock %}

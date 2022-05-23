@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 
+from django.contrib.messages import constants as messages
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -31,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,6 +44,7 @@ INSTALLED_APPS = [
     'store',
     'carts',
     'orders',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -76,7 +79,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'AusadhiPasal.wsgi.application'
 
-AUTH_USER_MODEL='accounts.Account'
+AUTH_USER_MODEL = 'accounts.Account'
 
 
 # Database
@@ -127,17 +130,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR /'static'
-STATICFILES_DIRS=[
-'AusadhiPasal/static',
+STATIC_ROOT = BASE_DIR / 'static'
+STATICFILES_DIRS = [
+    'AusadhiPasal/static',
 ]
 
-#media files configuration
-MEDIA_URL='/media/'
-MEDIA_ROOT= BASE_DIR/'media'
+# media files configuration
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR/'media'
 
-#messages
-from django.contrib.messages import constants as messages
+# messages
 MESSAGE_TAGS = {
     messages.ERROR: 'danger',
 }
@@ -153,9 +155,14 @@ MESSAGE_TAGS = {
 # EMAIL_HOST_USER=os.environ.get('EMAIL_HOST_USER')
 
 # Email_FROM_USER=''
-EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST='smtp.gmail.com'
-EMAIL_PORT=587
-EMAIL_HOST_USER='gurung999roshan@gmail.com'
-EMAIL_HOST_PASSWORD='Rgsincemay2001'
-EMAIL_USE_TLS= True
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'gurung999roshan@gmail.com'
+EMAIL_HOST_PASSWORD = 'Rgsincemay2001'
+EMAIL_USE_TLS = True
+
+# GRAPH_MODELS={
+#     "all_applications":True,
+#     "group_models":True,
+# }
