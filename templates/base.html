@@ -26,13 +26,15 @@
   <link href="{% static 'css/ui.css' %}" rel="stylesheet" type="text/css" />
   <link href="{% static 'css/responsive.css' %}" rel="stylesheet" media="only screen and (max-width: 1200px)" />
 
+  <link href="{% static 'css/custom.css' %}" rel="stylesheet" type="text/css" />
+
   <!-- custom javascript -->
   <script src="{% static 'js/script.js' %}" type="text/javascript"></script>
 
 
   <script type="text/javascript">
     /// some script
-  
+
 
     // jquery ready start
     $(document).ready(function () {
@@ -41,8 +43,19 @@
 // jquery end
   </script>
   <!-- khalti script -->
-<script src="https://khalti.s3.ap-south-1.amazonaws.com/KPG/dist/2020.12.17.0.0.0/khalti-checkout.iffe.js"></script>
+  <script src="https://khalti.s3.ap-south-1.amazonaws.com/KPG/dist/2020.12.17.0.0.0/khalti-checkout.iffe.js"></script>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      margin: 0;
+    }
 
+    .content {
+      flex-grow: 1;
+    }
+  </style>
 </head>
 
 <body>
@@ -58,3 +71,4 @@
 
   <!--footer-->
   {% include 'includes/footer.html'%}
+</body>

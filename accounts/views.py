@@ -1,7 +1,4 @@
-from itertools import product
-from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
-# from django.urls import reverse
 from accounts.models import *
 from carts.models import CartItem
 from orders.models import Order, OrderProduct
@@ -13,14 +10,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.sites.shortcuts import get_current_site
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
-from django.utils.encoding import force_bytes,force_str,force_text
+from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
 
 from carts.views import _cart_id
 from carts.models import Cart, CartItem
 import requests
-
 
 
 def register(request):
@@ -40,23 +36,26 @@ def register(request):
             user = Account.objects.create_user(
                 first_name=first_name, last_name=last_name, email=email, username=username, password=password)
             user.phone_number = phone_number
-            # user.is_active = False
             user.save()
 
+            userprofile = UserProfile(user=user)
+            userprofile.save()
+
             # USER ACTIVATION
-            current_site=get_current_site(request)
-            mail_subject='Please activate your account'
-            message=render_to_string('accounts/account_verification_email.html', {
-            'user':user, #user object
-            'domain': current_site,
-            'uid':urlsafe_base64_encode(force_bytes(user.pk)),# makking the primary key invisible so that nobody can see it
-            'token':default_token_generator.make_token(user),#default_token_generator=library which generate token #make_token=it will create token for user
+            current_site = get_current_site(request)
+            mail_subject = 'Please activate your account'
+            message = render_to_string('accounts/account_verification_email.html', {
+                'user': user,  # user object
+                'domain': current_site,
+                # makking the primary key invisible so that nobody can see it
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                # default_token_generator=library which generate token #make_token=it will create token for user
+                'token': default_token_generator.make_token(user),
             })
-            to_email=email
-            send_email=EmailMessage(mail_subject, message, to=[to_email])
+            to_email = email
+            send_email = EmailMessage(mail_subject, message, to=[to_email])
             send_email.send()
-            # messages.success(request, 'Registration Successfull.')
-            return redirect('/accounts/login/?command=verification&email=' +email)
+            return redirect('/accounts/login/?command=verification&email=' + email)
     else:
         form = RegistrationForm()
     context = {
@@ -75,12 +74,12 @@ def login(request):
 
         if user is not None:
             try:
-                cart= Cart.objects.get(cart_id=_cart_id(request))
-                is_cart_item_exists= CartItem.objects.filter(cart=cart).exists()
+                cart = Cart.objects.get(cart_id=_cart_id(request))
+                is_cart_item_exists = CartItem.objects.filter(
+                    cart=cart).exists()
                 if is_cart_item_exists:
-                    cart_item=CartItem.objects.filter(cart=cart)
-                    
-                    
+                    cart_item = CartItem.objects.filter(cart=cart)
+
                     for item in cart_item:
                         item.user = user
                         item.save()
@@ -88,12 +87,11 @@ def login(request):
                 pass
             auth.login(request, user)
             messages.success(request, 'You are now logged in.')
-            url=request.META.get('HTTP_REFERER')
+            url = request.META.get('HTTP_REFERER')
             try:
-                query=requests.utils.urlparse(url).query
-                print('query->',query)
+                query = requests.utils.urlparse(url).query
                 # next=/cart/checkout/
-                params=dict(x.split('=') for x in query.split('&'))
+                params = dict(x.split('=') for x in query.split('&'))
                 if 'next' in params:
                     nextPage = params['next']
                     return redirect(nextPage)
@@ -112,48 +110,67 @@ def logout(request):
     return redirect('login')
 
 # activating user
-def activate(request,uidb64,token):
-    try:
-        uid=urlsafe_base64_decode(uidb64).decode()
 
-        user=Account._default_manager.get(pk=uid) #return user object
-    except(TypeError,ValueError,OverflowError,Account.DoesNotExist):
-        user=None
-    
+
+def activate(request, uidb64, token):
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = Account._default_manager.get(pk=uid)  # return user object
+    except(TypeError, ValueError, OverflowError, Account.DoesNotExist):
+        user = None
+
     if user is not None and default_token_generator.check_token(user, token):
-        user.is_active=True
+        user.is_active = True
         user.save()
-        messages.success(request, 'Congratulations!! Your account is activated.')
+        messages.success(
+            request, 'Congratulations!! Your account is activated.')
         return redirect('login')
     else:
         messages.error(request, 'Invalid activation link!!')
         return redirect('register')
 
+
 @login_required(login_url='login')
 def dashboard(request):
-    return render(request, 'accounts/dashboard.html')
+    orders = Order.objects.order_by(
+        '-created_at').filter(user_id=request.user.id, is_ordered=True)
+    orders_count = orders.count()
+
+    print(request.user)
+    try:
+        userprofile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        userprofile = None
+    context = {
+        'orders_count': orders_count,
+        'userprofile': userprofile,
+    }
+    return render(request, 'accounts/dashboard.html', context)
 
 
 def forgotPassword(request):
-    if request.method=='POST':
-        email=request.POST['email']
+    if request.method == 'POST':
+        email = request.POST['email']
         if Account.objects.filter(email=email).exists():
-            user= Account.objects.get(email__exact=email)
+            user = Account.objects.get(email__exact=email)
 
             # reset password
-            current_site=get_current_site(request)
-            mail_subject='Reset your Password'
-            message=render_to_string('accounts/reset_password_email.html', {
-            'user':user, #user object
-            'domain': current_site,
-            'uid':urlsafe_base64_encode(force_bytes(user.pk)),# makking the primary key invisible so that nobody can see it
-            'token':default_token_generator.make_token(user),#default_token_generator=library which generate token #make_token=it will create token for user
+            current_site = get_current_site(request)
+            mail_subject = 'Reset your Password'
+            message = render_to_string('accounts/reset_password_email.html', {
+                'user': user,  # user object
+                'domain': current_site,
+                # makking the primary key invisible so that nobody can see it
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                # default_token_generator=library which generate token #make_token=it will create token for user
+                'token': default_token_generator.make_token(user),
             })
-            to_email=email
-            send_email=EmailMessage(mail_subject, message, to=[to_email])
+            to_email = email
+            send_email = EmailMessage(mail_subject, message, to=[to_email])
             send_email.send()
 
-            messages.success(request, 'Password reset email has been sent to your email address.')
+            messages.success(
+                request, 'Password reset email has been sent to your email address.')
             return redirect('login')
 
         else:
@@ -162,31 +179,32 @@ def forgotPassword(request):
     return render(request, 'accounts/forgotPassword.html')
 
 
-def resetpassword_validate(request,uidb64,token):
+def resetpassword_validate(request, uidb64, token):
     try:
-        uid=urlsafe_base64_decode(uidb64).decode()
+        uid = urlsafe_base64_decode(uidb64).decode()
 
-        user=Account._default_manager.get(pk=uid) #return user object
-    except(TypeError,ValueError,OverflowError,Account.DoesNotExist):
-        user=None
+        user = Account._default_manager.get(pk=uid)  # return user object
+    except(TypeError, ValueError, OverflowError, Account.DoesNotExist):
+        user = None
 
     if user is not None and default_token_generator.check_token(user, token):
-        request.session['uid']=uid
+        request.session['uid'] = uid
         messages.success(request, 'Please reset your password')
         return redirect('resetPassword')
     else:
         messages.error(request, 'This link has been expired.')
         return redirect('login')
 
-def resetPassword(request):
-    if request.method=='POST':
-        password=request.POST['password']
-        confirm_password=request.POST['confirm_password']
 
-        if password==confirm_password:
-            uid=request.session.get('uid')
-            user=Account.objects.get(pk=uid)
-            user.set_password(password) 
+def resetPassword(request):
+    if request.method == 'POST':
+        password = request.POST['password']
+        confirm_password = request.POST['confirm_password']
+
+        if password == confirm_password:
+            uid = request.session.get('uid')
+            user = Account.objects.get(pk=uid)
+            user.set_password(password)
             user.save()
             messages.success(request, 'Password reset successfull')
             return redirect('login')
@@ -197,20 +215,24 @@ def resetPassword(request):
 
     return render(request, 'accounts/resetPassword.html')
 
+
 @login_required(login_url='login')
 def my_orders(request):
-    orders = Order.objects.filter(user=request.user, is_ordered=True).order_by('-created_at')
+    orders = Order.objects.filter(
+        user=request.user, is_ordered=True).order_by('created_at')
     context = {
         'orders': orders,
     }
     return render(request, 'accounts/my_orders.html', context)
 
-@login_required(login_url='login')
+
+@ login_required(login_url='login')
 def edit_profile(request):
     userprofile = get_object_or_404(UserProfile, user=request.user)
     if request.method == 'POST':
         user_form = UserForm(request.POST, instance=request.user)
-        profile_form = UserProfileForm(request.POST, request.FILES, instance=userprofile)
+        profile_form = UserProfileForm(
+            request.POST, request.FILES, instance=userprofile)
         if user_form.is_valid() and profile_form.is_valid():
             user_form.save()
             profile_form.save()
@@ -226,7 +248,8 @@ def edit_profile(request):
     }
     return render(request, 'accounts/edit_profile.html', context)
 
-@login_required(login_url='login')
+
+@ login_required(login_url='login')
 def change_password(request):
     if request.method == 'POST':
         current_password = request.POST['current_password']
@@ -240,7 +263,6 @@ def change_password(request):
             if success:
                 user.set_password(new_password)
                 user.save()
-                # auth.logout(request)
                 messages.success(request, 'Password updated successfully.')
                 return redirect('change_password')
             else:
@@ -252,7 +274,7 @@ def change_password(request):
     return render(request, 'accounts/change_password.html')
 
 
-@login_required(login_url='login')
+@ login_required(login_url='login')
 def order_detail(request, order_id):
     order_detail = OrderProduct.objects.filter(order__order_number=order_id)
     order = Order.objects.get(order_number=order_id)
@@ -266,6 +288,3 @@ def order_detail(request, order_id):
         'subtotal': subtotal,
     }
     return render(request, 'accounts/order_detail.html', context)
-
-
-

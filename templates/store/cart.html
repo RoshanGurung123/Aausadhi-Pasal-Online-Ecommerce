@@ -2,7 +2,8 @@
 {% load static %}
 
 {% block content %}
-<section class="section-content padding-y bg">
+
+<section class="section-content content padding-y bg cart-container">
 	<div class="container">
 
 		<!-- ============================ COMPONENT 1 ================================= -->
@@ -48,13 +49,13 @@
 									<div class="col">
 										<div class="input-group input-spinner">
 											<div class="input-group-prepend">
-												<a href="{% url 'remove_cart' cart_item.product.id %}"
+												<a href="{% if cart_item.quantity <= 1 %} javascript:void(0) {% else %} {% url 'remove_cart' cart_item.product.id %} {% endif %}"
 													class="btn btn-light" type="button" id="button-plus"> <i
 														class="fa fa-minus"></i> </a>
 											</div>
 											<input type="text" class="form-control" value="{{cart_item.quantity}}">
 											<div class="input-group-append">
-												<a href="{% url 'add_cart' cart_item.product.id %}"
+												<a href="{% if cart_item.quantity >= cart_item.product.stock %} javascript:void(0) {% else %} {% url 'add_cart' cart_item.product.id %} {% endif %}"
 													class="btn btn-light" type="button" id="button-minus"> <i
 														class="fa fa-plus"></i> </a>
 											</div>
@@ -97,9 +98,6 @@
 							<dd class="text-right text-dark b"><strong>Rs. {{grand_total}}</strong></dd>
 						</dl>
 						<hr>
-						<!--<p class="text-center mb-3">
-				<img src="{% static './images/misc/khalti.png' %}" height="26">
-			</p>-->
 						<a href="{% url 'checkout' %}" class="btn btn-primary btn-block"> Checkout </a>
 						<a href="{% url 'store'%}" class="btn btn-light btn-block">Continue Shopping</a>
 					</div> <!-- card-body.// -->

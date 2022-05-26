@@ -29,6 +29,8 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+USE_TZ = True
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -144,16 +146,6 @@ MESSAGE_TAGS = {
     messages.ERROR: 'danger',
 }
 
-
-# SMTP CONFIGURATION
-# EMAIL_HOST='smtp.gmail.com'
-# EMAIL_PORT=587
-# EMAIL_HOST_USER='testsender100@gmail.com'
-# EMAIL_HOST_PASSWORD='Rgsince2001'
-# EMAIL_USE_TLS= True
-# EMAIL_HOST=os.environ.get('EMAIL_HOST')
-# EMAIL_HOST_USER=os.environ.get('EMAIL_HOST_USER')
-
 # Email_FROM_USER=''
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
@@ -161,8 +153,3 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = 'gurung999roshan@gmail.com'
 EMAIL_HOST_PASSWORD = 'Rgsincemay2001'
 EMAIL_USE_TLS = True
-
-# GRAPH_MODELS={
-#     "all_applications":True,
-#     "group_models":True,
-# }
